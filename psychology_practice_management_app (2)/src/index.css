@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-gray-200;
+  }
+  body {
+    @apply bg-white text-gray-900;
+  }
+}
+
+/* Auth form styles */
+.auth-input-field {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.auth-button {
+  @apply w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
+}
+
+.gap-form-field {
+  @apply gap-4;
+}
+
+.text-primary {
+  @apply text-blue-600;
+}
+
+.text-primary-hover {
+  @apply text-blue-700;
+}
+
+.text-secondary {
+  @apply text-gray-600;
+}
+
+/* Form input styles */
+.form-input {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.form-select {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+}
+
+.form-textarea {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y;
+}
+
+/* Calendar styles */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background-color: #e5e7eb;
+  border: 1px solid #e5e7eb;
+}
+
+.calendar-cell {
+  background-color: white;
+  min-height: 120px;
+  padding: 8px;
+  position: relative;
+}
+
+.calendar-header {
+  font-weight: 600;
+  text-align: center;
+  padding: 12px;
+  background-color: #f3f4f6;
+}
+
+.appointment-slot {
+  font-size: 0.75rem;
+  padding: 2px 4px;
+  margin: 1px 0;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.appointment-scheduled {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.appointment-completed {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.appointment-cancelled {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.appointment-available {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+/* Package cards */
+.package-card {
+  @apply border rounded-lg p-4 transition-all duration-200 hover:shadow-md;
+}
+
+.package-card.selected {
+  @apply border-blue-500 bg-blue-50;
+}
+
+/* Report styles */
+.report-section {
+  @apply mb-6 p-4 bg-gray-50 rounded-lg;
+}
+
+.report-title {
+  @apply text-lg font-semibold text-gray-900 mb-3;
+}
+
+.report-stat {
+  @apply text-center p-3 bg-white rounded-lg shadow-sm;
+}
+
+.report-stat-value {
+  @apply text-2xl font-bold text-blue-600;
+}
+
+.report-stat-label {
+  @apply text-sm text-gray-600 mt-1;
+}

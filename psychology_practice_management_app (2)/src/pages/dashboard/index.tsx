@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
@@ -19,6 +19,8 @@ export default function DashboardPage() {
   });
 
   const createAppointment = useMutation(api.appointments.createAppointment);
+  const updateAppointment = useMutation(api.appointments.updateAppointment);
+  const deleteAppointment = useMutation(api.appointments.deleteAppointment);
 
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
@@ -43,7 +45,7 @@ export default function DashboardPage() {
     const periodicity = prompt("Periodicidade? (semanal, quinzenal, mensal ou número de dias):", "semanal");
 
     try {
-      let result = await createAppointment({
+      await createAppointment({
         date: new Date(day.setHours(hour, 0, 0, 0)).getTime(),
         patientName,
       });
@@ -138,47 +140,56 @@ export default function DashboardPage() {
                     background: appointment ? "#dbeafe" : "white",
                   }}
                 >
-                 {appointment ? (
-  <div
-    style={{ fontSize: "12px", fontWeight: "600", color: "#1e3a8a", cursor: "pointer" }}
-    onClick={async () => {
-      const action = prompt(
-        `Sessão de ${appointment.patientName}\n\nDigite:\n- "editar" para alterar horário/paciente\n- "excluir" para remover sessão`
-      );
-      
-      if (action === "editar") {
-        const newName = prompt("Nome do paciente:", appointment.patientName);
-        const newHour = prompt("Nova hora (0-23):", new Date(appointment.date).getHours().toString());
+                  {appointment ? (
+                    <div
+                      style={{ fontSize: "12px", fontWeight: "600", color: "#1e3a8a", cursor: "pointer" }}
+                      onClick={async () => {
+                        const action = prompt(
+                          `Sessão de ${appointment.patientName}\n\nDigite:\n- "editar" para alterar horário/paciente\n- "excluir" para remover sessão`
+                        );
+                        
+                        if (action === "editar") {
+                          const newName = prompt("Nome do paciente:", appointment.patientName);
+                          const newHour = prompt("Nova hora (0-23):", new Date(appointment.date).getHours().toString());
 
-        try {
-          await updateAppointment({
-            appointmentId: appointment._id,
-            patientName: newName || appointment.patientName,
-            date: new Date(day.setHours(parseInt(newHour || "0"), 0, 0, 0)).getTime(),
-          });
-          alert("Sessão atualizada com sucesso!");
-        } catch (err: any) {
-          alert("Erro ao atualizar: " + err.message);
-        }
-      }
-      
-      if (action === "excluir") {
-        if (confirm("Tem certeza que deseja excluir esta sessão?")) {
-          try {
-            await deleteAppointment({ appointmentId: appointment._id });
-            alert("Sessão excluída!");
-          } catch (err: any) {
-            alert("Erro ao excluir: " + err.message);
-          }
-        }
-      }
-    }}
-  >
-    {appointment.patientName}
-  </div>
-) : (
-  <div style={{ fontSize: "10px", color: "#9ca3af" }}>+ Disponível</div>
-)}
+                          try {
+                            await updateAppointment({
+                              appointmentId: appointment._id,
+                              patientName: newName || appointment.patientName,
+                              date: new Date(day.setHours(parseInt(newHour || "0"), 0, 0, 0)).getTime(),
+                            });
+                            alert("Sessão atualizada com sucesso!");
+                          } catch (err: any) {
+                            alert("Erro ao atualizar: " + err.message);
+                          }
+                        }
+                        
+                        if (action === "excluir") {
+                          if (confirm("Tem certeza que deseja excluir esta sessão?")) {
+                            try {
+                              await deleteAppointment({ appointmentId: appointment._id });
+                              alert("Sessão excluída!");
+                            } catch (err: any) {
+                              alert("Erro ao excluir: " + err.message);
+                            }
+                          }
+                        }
+                      }}
+                    >
+                      {appointment.patientName}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: "10px", color: "#9ca3af" }}>+ Disponível</div>
+                  )}
+                </div>
+              );
+            })}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const btnStyle = {
   padding: "10px 16px",

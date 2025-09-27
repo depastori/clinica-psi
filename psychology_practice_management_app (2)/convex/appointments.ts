@@ -268,4 +268,49 @@ export const getAppointmentsByTherapist = query({
       .order("desc")
       .collect();
   },
+
+  import { v } from "convex/values";
+import { mutation, query } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
+
+// já temos createAppointment e listAppointmentsByWeek (do passo anterior)
+
+// Atualizar sessão (trocar paciente ou horário)
+export const updateAppointment = mutation({
+  args: {
+    appointmentId: v.id("appointments"),
+    date: v.optional(v.number()),
+    patientName: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const therapistId = await getAuthUserId(ctx);
+    if (!therapistId) throw new Error("Usuário não autenticado");
+    const { appointmentId, ...updates } = args;
+
+    // remove undefined
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([_, v]) => v !== undefined)
+    );
+
+    await ctx.db.patch(appointmentId, cleanUpdates);
+    return appointmentId;
+  },
+});
+
+// Excluir sessão
+export const deleteAppointment = mutation({
+  args: { appointmentId: v.id("appointments") },
+  handler: async (ctx, args) => {
+    const therapistId = await getAuthUserId(ctx);
+    if (!therapistId) throw new Error("Usuário não autenticado");
+
+    const appt = await ctx.db.get(args.appointmentId);
+    if (!appt || appt.therapistId !== therapistId) {
+      throw new Error("Sessão não encontrada");
+    }
+
+    await ctx.db.delete(args.appointmentId);
+    return args.appointmentId;
+  },
+});
 });

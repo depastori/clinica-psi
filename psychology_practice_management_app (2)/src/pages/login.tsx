@@ -9,18 +9,16 @@ export default function LoginPage() {
 
   const [identity, setIdentity] = useState(""); // email OU username
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
       const user = await login({ identity, password });
-      alert(`Bem-vindo, ${user.username || user.email}!`);
-      // Aqui você pode salvar userId no storage ou contexto
+      alert(`Bem-vindo, ${user.username || user.email}`);
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
@@ -30,43 +28,42 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={containerStyle}>
-      <h1>Login</h1>
-      <form onSubmit={handleSubmit} style={formStyle}>
-        <input
-          placeholder="Usuário ou Email"
-          value={identity}
-          onChange={(e) => setIdentity(e.target.value)}
-          style={inputStyle}
-        />
-        <input
-          type="password"
-          placeholder="Senha"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={inputStyle}
-        />
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <button type="submit" style={btnStyle} disabled={loading}>
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
-      </form>
-      <p>
-        Não tem conta? <a href="/register">Registrar</a>
-      </p>
+    <div style={pageStyle}>
+      <div style={cardStyle}>
+        <h1 style={titleStyle}>Login</h1>
+        <form onSubmit={handleSubmit} style={formStyle}>
+          <input
+            style={inputStyle}
+            placeholder="Usuário ou Email"
+            value={identity}
+            onChange={(e) => setIdentity(e.target.value)}
+          />
+          <input
+            style={inputStyle}
+            type="password"
+            placeholder="Senha"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {error && <p style={{ color: "red", marginTop: "-5px" }}>{error}</p>}
+          <button style={btnStyle} type="submit" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
+        </form>
+        <p style={footerText}>
+          Não tem conta? <a href="/register" style={linkStyle}>Registrar</a>
+        </p>
+      </div>
     </div>
   );
 }
 
-const containerStyle = { maxWidth: "400px", margin: "50px auto", textAlign: "center" };
+// --- mesmos estilos do register ---
+const pageStyle = { display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#f3f4f6" };
+const cardStyle = { background: "white", padding: "30px", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", width: "350px", textAlign: "center" };
+const titleStyle = { marginBottom: "20px", fontSize: "24px", fontWeight: 600, color: "#111827" };
 const formStyle = { display: "flex", flexDirection: "column", gap: "12px" };
-const inputStyle = { padding: "10px", borderRadius: "6px", border: "1px solid #ccc" };
-const btnStyle = {
-  padding: "10px 16px",
-  background: "#2563eb",
-  color: "white",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-  fontWeight: "500",
-};
+const inputStyle = { padding: "10px", border: "1px solid #d1d5db", borderRadius: "6px" };
+const btnStyle = { padding: "10px", background: "#2563eb", color: "white", fontWeight: 500, border: "none", borderRadius: "6px", cursor: "pointer" };
+const footerText = { marginTop: "15px", fontSize: "14px" };
+const linkStyle = { color: "#2563eb", textDecoration: "none" };

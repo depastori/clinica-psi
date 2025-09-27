@@ -6,17 +6,14 @@ export default function MonthlyReportPage() {
   const router = useRouter();
   const { month: monthParam } = router.query;
 
-const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-const [month, year] = monthParam ? (monthParam as string).split('-').map(Number) : [new Date().getMonth() + 1, new Date().getFullYear()];
-const currentMonthName = monthNames[month - 1];
+  const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+  const [month, year] = monthParam ? (monthParam as string).split('-').map(Number) : [new Date().getMonth() + 1, new Date().getFullYear()];
+  const currentMonthName = monthNames[month - 1];
 
   const report = useQuery(api.finance.getMonthlyReport, month && year ? { month, year } : "skip");
   const dailySummary = useQuery(api.finance.getDailySummary, { date: new Date().setHours(0,0,0,0) });
 
   if (!report || !dailySummary) return <div style={{ padding: "20px" }}>Carregando relatório...</div>;
-
-  const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-  const currentMonthName = monthNames[month - 1];
 
   const totalIncome = report.incomes.reduce((acc, i) => acc + i.amount, 0);
   const totalExpense = report.expenses.reduce((acc, e) => acc + e.amount, 0);
@@ -28,20 +25,22 @@ const currentMonthName = monthNames[month - 1];
   return (
     <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
       <h1>📊 Relatório Financeiro de {currentMonthName} de {year}</h1>
+
+      {/* Navegação entre meses */}
       <div style={{ display: "flex", justifyContent: "space-between", margin: "20px 0" }}>
-  <button
-    style={btnStyle}
-    onClick={() => router.push(`/finance/reports/${month === 1 ? 12 : month - 1}-${month === 1 ? year - 1 : year}`)}
-  >
-    ← Mês Anterior
-  </button>
-  <button
-    style={btnStyle}
-    onClick={() => router.push(`/finance/reports/${month === 12 ? 1 : month + 1}-${month === 12 ? year + 1 : year}`)}
-  >
-    Próximo Mês →
-  </button>
-</div>
+        <button
+          style={btnStyle}
+          onClick={() => router.push(`/finance/reports/${month === 1 ? 12 : month - 1}-${month === 1 ? year - 1 : year}`)}
+        >
+          ← Mês Anterior
+        </button>
+        <button
+          style={btnStyle}
+          onClick={() => router.push(`/finance/reports/${month === 12 ? 1 : month + 1}-${month === 12 ? year + 1 : year}`)}
+        >
+          Próximo Mês →
+        </button>
+      </div>
 
       {/* Resumo do Mês */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px", margin: "20px 0" }}>
@@ -79,7 +78,7 @@ const currentMonthName = monthNames[month - 1];
           <ul>
             {report.incomes.map((i) => (
               <li key={i._id}>
-                {new Date(i.date).toLocaleDateString("pt-BR")} - {i.description} ({i.source}) - {i.currency === "EUR" ? "€" : "R$"} {i.amount.toFixed(2).replace(".", ",")}
+                {new Date(i.date).toLocaleDateString("pt-BR")} - {i.description} ({i.source || "Avulsa"}) - {i.currency === "EUR" ? "€" : "R$"} {i.amount.toFixed(2).replace(".", ",")}
               </li>
             ))}
           </ul>
@@ -90,7 +89,7 @@ const currentMonthName = monthNames[month - 1];
           <ul>
             {report.expenses.map((e) => (
               <li key={e._id}>
-                {new Date(e.dueDate).toLocaleDateString("pt-BR")} - {e.description} ({e.category}) - {e.currency === "EUR" ? "€" : "R$"} {e.amount.toFixed(2).replace(".", ",")} {e.paid ? "✅ Pago" : "⏳ Em aberto"}
+                {new Date(e.dueDate).toLocaleDateString("pt-BR")} - {e.description} ({e.category || "Sem categoria"}) - {e.currency === "EUR" ? "€" : "R$"} {e.amount.toFixed(2).replace(".", ",")} {e.paid ? "✅ Pago" : "⏳ Em aberto"}
               </li>
             ))}
           </ul>
@@ -100,6 +99,14 @@ const currentMonthName = monthNames[month - 1];
   );
 }
 
+const cardStyle = {
+  padding: "15px",
+  border: "1px solid #e5e7eb",
+  borderRadius: "8px",
+  backgroundColor: "#fff",
+  textAlign: "center" as "center",
+};
+
 const btnStyle = {
   padding: "10px 16px",
   background: "#2563eb",
@@ -108,5 +115,4 @@ const btnStyle = {
   borderRadius: "6px",
   cursor: "pointer",
   fontWeight: "500",
-};
 };

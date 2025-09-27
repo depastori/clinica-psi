@@ -343,4 +343,19 @@ export const getPatientByEmail = query({
       .filter((q) => q.eq(q.field("therapistId"), therapistId))
       .first();
   },
+
+  // Adicionar esta query no final do arquivo patients.ts
+export const listPatients = query({
+  handler: async (ctx) => {
+    const therapistId = await getAuthUserId(ctx);
+    if (!therapistId) {
+      return [];
+    }
+
+    return await ctx.db
+      .query("patients")
+      .withIndex("by_active", (q) => q.eq("therapistId", therapistId).eq("isActive", true))
+      .order("desc")
+      .collect();
+  },
 });

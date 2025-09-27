@@ -54,4 +54,78 @@ export const login = mutation({
 
     return { userId: user._id, username: user.username, email: user.email };
   }
+
+  // ... (seus imports e outras funções existentes) ...
+
+// --- Adicione estas duas mutations aqui ---
+
+// Cadastro
+export const register = mutation({
+  args: {
+    username: v.optional(v.string()),
+    email: v.optional(v.string()),
+    password: v.string()
+  },
+  handler: async (ctx, args) => {
+    if (!args.username && !args.email) {
+      throw new Error("É necessário informar email ou usuário");
+    }
+
+    // Normalizar email
+    const email = args.email?.toLowerCase();
+
+    // Verifica duplicado
+    if (email) {
+      const userByEmail = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", email))
+        .unique();
+      if (userByEmail) throw new Error("Email já cadastrado");
+    }
+    if (args.username) {
+      const userByUsername = await ctx.db
+        .query("users")
+        .withIndex("by_username", (q) => q.eq("username", args.username))
+        .unique();
+      if (userByUsername) throw new Error("Usuário já cadastrado");
+    }
+
+    const hashed = await bcrypt.hash(args.password, 10);
+
+    return await ctx.db.insert("users", {
+      username: args.username,
+      email,
+      password: hashed,
+      createdAt: Date.now()
+    });
+  }
+});
+
+// Login
+export const login = mutation({
+  args: { identity: v.string(), password: v.string() },
+  handler: async (ctx, args) => {
+    const identityLower = args.identity.toLowerCase();
+
+    // tenta encontrar por email
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", identityLower))
+      .unique();
+
+    // se não achou por email, tenta por username
+    if (!user) {
+      user = await ctx.db
+        .query("users")
+        .withIndex("by_username", (q) => q.eq("username", args.identity))
+        .unique();
+    }
+
+    if (!user) throw new Error("Usuário não encontrado");
+
+    const ok = await bcrypt.compare(args.password, user.password);
+    if (!ok) throw new Error("Senha incorreta");
+
+    return { userId: user._id, username: user.username, email: user.email };
+  }
 });

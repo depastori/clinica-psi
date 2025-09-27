@@ -208,4 +208,13 @@ const applicationTables = {
 export default defineSchema({
   ...authTables,
   ...applicationTables,
+
+  users: defineTable({
+    username: v.optional(v.string()),   // Nome de usuário opcional
+    email: v.optional(v.string()),      // Email opcional
+    password: v.string(),               // Senha (armazenada como hash)
+    createdAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_username", ["username"]),
 });

@@ -138,22 +138,47 @@ export default function DashboardPage() {
                     background: appointment ? "#dbeafe" : "white",
                   }}
                 >
-                  {appointment ? (
-                    <div style={{ fontSize: "12px", fontWeight: "600", color: "#1e3a8a" }}>
-                      {appointment.patientName}
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: "10px", color: "#9ca3af" }}>+ Disponível</div>
-                  )}
-                </div>
-              );
-            })}
-          </React.Fragment>
-        ))}
-      </div>
-    </div>
-  );
-}
+                 {appointment ? (
+  <div
+    style={{ fontSize: "12px", fontWeight: "600", color: "#1e3a8a", cursor: "pointer" }}
+    onClick={async () => {
+      const action = prompt(
+        `Sessão de ${appointment.patientName}\n\nDigite:\n- "editar" para alterar horário/paciente\n- "excluir" para remover sessão`
+      );
+      
+      if (action === "editar") {
+        const newName = prompt("Nome do paciente:", appointment.patientName);
+        const newHour = prompt("Nova hora (0-23):", new Date(appointment.date).getHours().toString());
+
+        try {
+          await updateAppointment({
+            appointmentId: appointment._id,
+            patientName: newName || appointment.patientName,
+            date: new Date(day.setHours(parseInt(newHour || "0"), 0, 0, 0)).getTime(),
+          });
+          alert("Sessão atualizada com sucesso!");
+        } catch (err: any) {
+          alert("Erro ao atualizar: " + err.message);
+        }
+      }
+      
+      if (action === "excluir") {
+        if (confirm("Tem certeza que deseja excluir esta sessão?")) {
+          try {
+            await deleteAppointment({ appointmentId: appointment._id });
+            alert("Sessão excluída!");
+          } catch (err: any) {
+            alert("Erro ao excluir: " + err.message);
+          }
+        }
+      }
+    }}
+  >
+    {appointment.patientName}
+  </div>
+) : (
+  <div style={{ fontSize: "10px", color: "#9ca3af" }}>+ Disponível</div>
+)}
 
 const btnStyle = {
   padding: "10px 16px",

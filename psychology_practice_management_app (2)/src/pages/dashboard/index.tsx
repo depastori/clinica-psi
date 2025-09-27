@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useRouter } from "next/router";
 
 const daysOfWeek = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -11,8 +12,17 @@ function getStartOfWeek(date: Date) {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const now = new Date();
   const [currentWeekStart, setCurrentWeekStart] = useState(getStartOfWeek(now));
+
+  // Proteção de rota: se não tem userId, manda para login
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      router.push("/login");
+    }
+  }, [router]);
 
   const appointments = useQuery(api.appointments.listAppointmentsByWeek, {
     weekStart: currentWeekStart.getTime(),
@@ -30,169 +40,150 @@ export default function DashboardPage() {
     });
   }, [currentWeekStart]);
 
-  // Avançar/voltar semanas
   const changeWeek = (offset: number) => {
     const newStart = new Date(currentWeekStart);
     newStart.setDate(currentWeekStart.getDate() + offset * 7);
     setCurrentWeekStart(newStart);
   };
 
-  // Criar nova sessão
+  // Criar sessão
   const handleCreateAppointment = async (day: Date, hour: number) => {
     const patientName = prompt("Digite o nome do paciente:");
     if (!patientName) return;
-
-    const periodicity = prompt("Periodicidade? (semanal, quinzenal, mensal ou número de dias):", "semanal");
 
     try {
       await createAppointment({
         date: new Date(day.setHours(hour, 0, 0, 0)).getTime(),
         patientName,
       });
-
-      // Agendamento recorrente
-      if (periodicity) {
-        let nextDate = new Date(day);
-        for (let i = 0; i < 10; i++) { // gera até 10 sessões futuras
-          if (periodicity === "semanal") nextDate.setDate(nextDate.getDate() + 7);
-          else if (periodicity === "quinzenal") nextDate.setDate(nextDate.getDate() + 14);
-          else if (periodicity === "mensal") nextDate.setMonth(nextDate.getMonth() + 1);
-          else if (!isNaN(parseInt(periodicity))) nextDate.setDate(nextDate.getDate() + parseInt(periodicity));
-          else break;
-
-          await createAppointment({
-            date: nextDate.getTime(),
-            patientName,
-          });
-        }
-      }
-
-      alert("Sessão criada com sucesso!");
+      alert("Sessão criada!");
     } catch (err: any) {
       alert("Erro ao criar sessão: " + err.message);
     }
   };
 
-  const hoursList = Array.from({ length: 12 }, (_, i) => i + 8); // agenda das 8h às 20h
+  const hoursList = Array.from({ length: 12 }, (_, i) => i + 8);
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <h1>📅 Agenda Semanal</h1>
-
-      {/* Controles de navegação */}
-      <div style={{ display: "flex", justifyContent: "space-between", margin: "20px 0" }}>
-        <button onClick={() => changeWeek(-1)} style={btnStyle}>← Semana Anterior</button>
-        <h2>
-          {weekDays[0].toLocaleDateString("pt-BR")} - {weekDays[6].toLocaleDateString("pt-BR")}
-        </h2>
-        <button onClick={() => changeWeek(1)} style={btnStyle}>Próxima Semana →</button>
+    <div style={{ display: "flex", height: "100vh" }}>
+      {/* Sidebar */}
+      <div style={sidebarStyle}>
+        <h2 style={{ color: "white", marginBottom: "30px" }}>Painel</h2>
+        <nav style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+          <button style={linkStyle} onClick={() => router.push("/patients")}>👥 Pacientes</button>
+          <button style={linkStyle} onClick={() => router.push("/dashboard")}>📅 Agenda</button>
+          <button style={linkStyle} onClick={() => router.push("/finance/reports/1-2025")}>💰 Financeiro</button>
+          <button
+            style={{ ...linkStyle, marginTop: "auto", background: "#dc2626" }}
+            onClick={() => {
+              localStorage.removeItem("userId"); // 🔹 Limpa login
+              router.push("/login");
+            }}
+          >
+            🚪 Sair
+          </button>
+        </nav>
       </div>
 
-      {/* Grade da Semana */}
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "80px repeat(7, 1fr)",
-        border: "1px solid #d1d5db",
-        borderRadius: "8px",
-        overflow: "hidden",
-      }}>
-        {/* Cabeçalho dos dias */}
-        <div style={{ background: "#f9fafb" }}></div>
-        {weekDays.map((day, i) => (
-          <div key={i} style={{ padding: "10px", background: "#f9fafb", textAlign: "center", borderLeft: "1px solid #e5e7eb" }}>
-            <div style={{ fontWeight: "600" }}>{daysOfWeek[i]}</div>
-            <div style={{ fontSize: "12px", color: "#6b7280" }}>
-              {day.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+      {/* Conteúdo principal */}
+      <div style={{ flex: 1, padding: "20px", overflowY: "auto" }}>
+        <h1>📅 Agenda Semanal</h1>
+
+        {/* Navegação de semanas */}
+        <div style={{ display: "flex", justifyContent: "space-between", margin: "20px 0" }}>
+          <button onClick={() => changeWeek(-1)} style={btnStyle}>← Semana Anterior</button>
+          <h2>
+            {weekDays[0].toLocaleDateString("pt-BR")} - {weekDays[6].toLocaleDateString("pt-BR")}
+          </h2>
+          <button onClick={() => changeWeek(1)} style={btnStyle}>Próxima Semana →</button>
+        </div>
+
+        {/* Grade da semana */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "80px repeat(7, 1fr)",
+          border: "1px solid #d1d5db",
+          borderRadius: "8px",
+          overflow: "hidden",
+        }}>
+          {/* Cabeçalho */}
+          <div style={{ background: "#f9fafb" }}></div>
+          {weekDays.map((day, i) => (
+            <div key={i} style={{ padding: "10px", background: "#f9fafb", textAlign: "center", borderLeft: "1px solid #e5e7eb" }}>
+              <div style={{ fontWeight: "600" }}>{daysOfWeek[i]}</div>
+              <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                {day.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        {/* Linhas de horas */}
-        {hoursList.map((hour) => (
-          <React.Fragment key={hour}>
-            {/* Coluna das horas */}
-            <div style={{ padding: "8px", fontSize: "12px", textAlign: "right", borderTop: "1px solid #e5e7eb" }}>
-              {hour}:00
-            </div>
+          {/* Linhas de horas */}
+          {hoursList.map((hour) => (
+            <React.Fragment key={hour}>
+              <div style={{ padding: "8px", fontSize: "12px", textAlign: "right", borderTop: "1px solid #e5e7eb" }}>
+                {hour}:00
+              </div>
+              {weekDays.map((day, i) => {
+                const slotDate = new Date(day);
+                slotDate.setHours(hour, 0, 0, 0);
+                const appointment = appointments?.find(a => {
+                  const d = new Date(a.date);
+                  return d.toDateString() === slotDate.toDateString() && d.getHours() === hour;
+                });
 
-            {/* Slots da semana */}
-            {weekDays.map((day, i) => {
-              const slotDate = new Date(day);
-              slotDate.setHours(hour, 0, 0, 0);
-              const appointment = appointments?.find(a => {
-                const d = new Date(a.date);
-                return d.getDate() === slotDate.getDate() &&
-                       d.getMonth() === slotDate.getMonth() &&
-                       d.getFullYear() === slotDate.getFullYear() &&
-                       d.getHours() === hour;
-              });
-
-              return (
-                <div
-                  key={`${i}-${hour}`}
-                  onClick={() => !appointment && handleCreateAppointment(new Date(slotDate), hour)}
-                  style={{
-                    padding: "8px",
-                    minHeight: "60px",
-                    borderTop: "1px solid #e5e7eb",
-                    borderLeft: "1px solid #e5e7eb",
-                    cursor: appointment ? "default" : "pointer",
-                    background: appointment ? "#dbeafe" : "white",
-                  }}
-                >
-                  {appointment ? (
-                    <div
-                      style={{ fontSize: "12px", fontWeight: "600", color: "#1e3a8a", cursor: "pointer" }}
-                      onClick={async () => {
-                        const action = prompt(
-                          `Sessão de ${appointment.patientName}\n\nDigite:\n- "editar" para alterar horário/paciente\n- "excluir" para remover sessão`
-                        );
-                        
-                        if (action === "editar") {
-                          const newName = prompt("Nome do paciente:", appointment.patientName);
-                          const newHour = prompt("Nova hora (0-23):", new Date(appointment.date).getHours().toString());
-
-                          try {
-                            await updateAppointment({
-                              appointmentId: appointment._id,
-                              patientName: newName || appointment.patientName,
-                              date: new Date(day.setHours(parseInt(newHour || "0"), 0, 0, 0)).getTime(),
-                            });
-                            alert("Sessão atualizada com sucesso!");
-                          } catch (err: any) {
-                            alert("Erro ao atualizar: " + err.message);
-                          }
-                        }
-                        
-                        if (action === "excluir") {
-                          if (confirm("Tem certeza que deseja excluir esta sessão?")) {
-                            try {
-                              await deleteAppointment({ appointmentId: appointment._id });
-                              alert("Sessão excluída!");
-                            } catch (err: any) {
-                              alert("Erro ao excluir: " + err.message);
-                            }
-                          }
-                        }
-                      }}
-                    >
-                      {appointment.patientName}
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: "10px", color: "#9ca3af" }}>+ Disponível</div>
-                  )}
-                </div>
-              );
-            })}
-          </React.Fragment>
-        ))}
+                return (
+                  <div
+                    key={`${i}-${hour}`}
+                    onClick={() => !appointment && handleCreateAppointment(new Date(slotDate), hour)}
+                    style={{
+                      padding: "8px",
+                      minHeight: "60px",
+                      borderTop: "1px solid #e5e7eb",
+                      borderLeft: "1px solid #e5e7eb",
+                      cursor: appointment ? "default" : "pointer",
+                      background: appointment ? "#dbeafe" : "white",
+                    }}
+                  >
+                    {appointment ? (
+                      <div style={{ fontSize: "12px", fontWeight: "600", color: "#1e3a8a" }}>
+                        {appointment.patientName}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: "10px", color: "#9ca3af" }}>+ Disponível</div>
+                    )}
+                  </div>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
+const sidebarStyle = {
+  width: "220px",
+  background: "#1e3a8a",
+  color: "white",
+  display: "flex",
+  flexDirection: "column" as "column",
+  padding: "20px",
+};
+
+const linkStyle = {
+  padding: "10px 14px",
+  background: "#2563eb",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  textAlign: "left" as "left",
+  cursor: "pointer",
+  fontWeight: 500,
+};
+
 const btnStyle = {
-  padding: "10px 16px",
+  padding: "8px 12px",
   background: "#2563eb",
   color: "white",
   border: "none",

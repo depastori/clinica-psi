@@ -16,26 +16,55 @@ export default function FinancePage() {
   const balance = totalIncome - totalExpense;
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
-      <h1>💰 Painel Financeiro</h1>
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "15px", margin: "20px 0" }}>
+  <button
+    style={btnStyle}
+    onClick={() => {
+      if (month === 1) {
+        setMonth(12);
+        setYear(year - 1);
+      } else {
+        setMonth(month - 1);
+      }
+    }}
+  >
+    ← Mês Anterior
+  </button>
 
-      {/* Selecionar mês */}
-      <div style={{ display: "flex", gap: "10px", margin: "20px 0" }}>
-        <input
-          type="number"
-          value={month}
-          onChange={(e) => setMonth(parseInt(e.target.value))}
-          min={1}
-          max={12}
-        />
-        <input
-          type="number"
-          value={year}
-          onChange={(e) => setYear(parseInt(e.target.value))}
-          min={2020}
-          max={2100}
-        />
-      </div>
+  <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+    <input
+      type="number"
+      value={month}
+      onChange={(e) => setMonth(parseInt(e.target.value))}
+      min={1}
+      max={12}
+      style={{ width: "60px", textAlign: "center", padding: "5px" }}
+    />
+    /
+    <input
+      type="number"
+      value={year}
+      onChange={(e) => setYear(parseInt(e.target.value))}
+      min={2020}
+      max={2100}
+      style={{ width: "80px", textAlign: "center", padding: "5px" }}
+    />
+  </div>
+
+  <button
+    style={btnStyle}
+    onClick={() => {
+      if (month === 12) {
+        setMonth(1);
+        setYear(year + 1);
+      } else {
+        setMonth(month + 1);
+      }
+    }}
+  >
+    Próximo Mês →
+  </button>
+</div>
 
       <h2>
         Resumo de {month}/{year}
@@ -93,4 +122,14 @@ const cardStyle = {
   border: "1px solid #e5e7eb",
   borderRadius: "8px",
   backgroundColor: "#fff",
+
+  const btnStyle = {
+  padding: "8px 16px",
+  background: "#2563eb",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontWeight: "500",
+};
 };

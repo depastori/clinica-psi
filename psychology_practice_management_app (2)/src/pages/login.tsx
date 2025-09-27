@@ -18,8 +18,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login({ identity, password });
-      alert(`Bem-vindo, ${user.username || user.email}`);
-      router.push("/dashboard");
+localStorage.setItem("userId", user.userId); // 🔹 
+alert(`Bem-vindo, ${user.username || user.email}`);
+router.push("/dashboard"); 
     } catch (err: any) {
       setError(err.message);
     } finally {

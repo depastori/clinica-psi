@@ -6,7 +6,9 @@ export default function MonthlyReportPage() {
   const router = useRouter();
   const { month: monthParam } = router.query;
 
-  const [month, year] = monthParam ? (monthParam as string).split('-').map(Number) : [0, 0];
+const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const [month, year] = monthParam ? (monthParam as string).split('-').map(Number) : [new Date().getMonth() + 1, new Date().getFullYear()];
+const currentMonthName = monthNames[month - 1];
 
   const report = useQuery(api.finance.getMonthlyReport, month && year ? { month, year } : "skip");
   const dailySummary = useQuery(api.finance.getDailySummary, { date: new Date().setHours(0,0,0,0) });
@@ -26,6 +28,20 @@ export default function MonthlyReportPage() {
   return (
     <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
       <h1>📊 Relatório Financeiro de {currentMonthName} de {year}</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", margin: "20px 0" }}>
+  <button
+    style={btnStyle}
+    onClick={() => router.push(`/finance/reports/${month === 1 ? 12 : month - 1}-${month === 1 ? year - 1 : year}`)}
+  >
+    ← Mês Anterior
+  </button>
+  <button
+    style={btnStyle}
+    onClick={() => router.push(`/finance/reports/${month === 12 ? 1 : month + 1}-${month === 12 ? year + 1 : year}`)}
+  >
+    Próximo Mês →
+  </button>
+</div>
 
       {/* Resumo do Mês */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px", margin: "20px 0" }}>
@@ -84,10 +100,13 @@ export default function MonthlyReportPage() {
   );
 }
 
-const cardStyle = {
-  padding: "15px",
-  border: "1px solid #e5e7eb",
-  borderRadius: "8px",
-  backgroundColor: "#fff",
-  textAlign: "center" as "center",
+const btnStyle = {
+  padding: "10px 16px",
+  background: "#2563eb",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontWeight: "500",
+};
 };

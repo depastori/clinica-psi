@@ -1,23 +1,57 @@
-import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
-import { Password } from "@convex-dev/auth/providers/Password";
-import { Anonymous } from "@convex-dev/auth/providers/Anonymous";
-import { query } from "./_generated/server";
+import { mutation } from "./_generated/server";
+import { v } from "convex/values";
+import bcrypt from "bcryptjs"; // precisa no projeto
 
-export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [Password, Anonymous],
+// Cadastro
+export const register = mutation({
+  args: { 
+    username: v.optional(v.string()), 
+    email: v.optional(v.string()), 
+    password: v.string() 
+  },
+  handler: async (ctx, args) => {
+    if (!args.username && !args.email) {
+      throw new Error("É necessário informar email ou usuário");
+    }
+
+    // Normalizar email
+    const email = args.email?.toLowerCase();
+
+    // Verifica se já existe
+    let existing = await ctx.db
+      .query("users")
+      .withIndex("by_identity", q => q.eq("email", email).or(q.eq("username", args.username)))
+      .first();
+
+    if (existing) throw new Error("Usuário já cadastrado");
+
+    // Criptografar senha
+    const hashed = await bcrypt.hash(args.password, 10);
+
+    return await ctx.db.insert("users", {
+      username: args.username,
+      email,
+      password: hashed,
+      createdAt: Date.now()
+    });
+  }
 });
 
-export const loggedInUser = query({
-  handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      return null;
-    }
-    const user = await ctx.db.get(userId);
-    if (!user) {
-      return null;
-    }
-    
-    return user;
-  },
+// Login
+export const login = mutation({
+  args: { identity: v.string(), password: v.string() },
+  handler: async (ctx, args) => {
+    const identityLower = args.identity.toLowerCase();
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_identity", q => q.eq("email", identityLower).or(q.eq("username", args.identity)))
+      .first();
+
+    if (!user) throw new Error("Usuário não encontrado");
+    const bcrypt = (await import("bcryptjs")).default;
+    const ok = await bcrypt.compare(args.password, user.password);
+    if (!ok) throw new Error("Senha incorreta");
+
+    return { userId: user._id, username: user.username, email: user.email };
+  }
 });
